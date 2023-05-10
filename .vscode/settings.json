@@ -1,4 +1,0 @@
-{
-    "appService.defaultWebAppToDeploy": "undefined/subscriptions/f3bd6243-bb01-4a83-b48e-5688c61a19eb/resourceGroups/azuretestingbackend/providers/Microsoft.Web/sites/azuretestingbackend",
-    "appService.deploySubpath": "."
-}
