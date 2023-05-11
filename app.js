@@ -24,7 +24,7 @@ const options = {
         },
         servers: [
             {
-                url: "https://customerbackend.azurewebsites.net/",
+                url: process.env.SWAGGER_URL || "http://localhost:5050",
             },
         ],
     },
