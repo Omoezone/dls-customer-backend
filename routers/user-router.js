@@ -11,7 +11,7 @@ router.use(express.json());
 
 // Default route
 router.get("/", (req, res) => {
-    res.send("Welcome to customer FUCKING frontpage!")
+    res.send("Welcome to customer frontpage!")
 })
 
 // Get all customers with customer_data joined
