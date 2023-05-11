@@ -20,11 +20,11 @@ const options = {
         info: {	
             title: "Customer API",
             version: "1.0.0",
-            description: "A simple Express Library API for customers",
+            description: "A simple Express Library API for customers, accounts and transactions.",
         },
         servers: [
             {
-                url: "SWAGGER_URL",
+                url: "https://customerbackend.azurewebsites.net/",
             },
         ],
     },
