@@ -1,5 +1,6 @@
 import express from "express";
 import userRouter from "./routers/user-router.js";
+import {getCustomers, getSingleCustomer, getDeletedCustomers, updateCustomer, deleteCustomer, createCustomer} from "./routers/user-router.js";
 import accountRouter from "./routers/account-router.js";
 import transactionRouter from "./routers/transaction-router.js";
 import swaggerUi from "swagger-ui-express";
@@ -16,6 +17,14 @@ app.use(express.json());
 app.use(userRouter);
 app.use(accountRouter);
 app.use(transactionRouter);
+
+// The function calls for the routes
+//console.log("hello",await getCustomers());
+//console.log("hello single:",await getSingleCustomer({id: 1}));
+//console.log("hello deleted:",await getDeletedCustomers());
+//console.log("hello update:",await updateCustomer({id: 1, firstname: "test", lastname:"lastname", age:80, email:"email@mail.dk", password:"HelloAdgangskode"}));
+//console.log("hello delete:",await deleteCustomer({id: 1}));
+//console.log("hello create:",await createCustomer({firstname: "NyCus", lastname:"nyCustomerLast", age:80, email:"email@mail", password:"HelloAdgangskode"}));
 
 // Swagger Options, used for documentation and UI
 const options = {
