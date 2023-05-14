@@ -5,7 +5,7 @@ import accountRouter from "./routers/account-router.js";
 import transactionRouter from "./routers/transaction-router.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
-import amqp from 'amqplib/callback_api.js';
+import amqp from 'amqplib';
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -48,38 +48,83 @@ const specs = swaggerJsdoc(options);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // RABBITMQ
-amqp.connect(process.env.CLOUDAMQP_URL + "?heartbeat=60", (err, connection) => {
-    let r = 0;
-    if (err) {
-        throw err;
-    }
-    connection.createChannel(function(error, channel) {
-    if (error) {
-        throw error;
-    }
-    let queue = 'customer_control_message';
+async function connectRabbit() {
+    try {
+    let connection = await amqp.connect(process.env.CLOUDAMQP_URL + "?heartbeat=60");
+    let channel = await connection.createChannel();
+    const queue = 'customer_control_message';
 
-    channel.assertQueue(queue, {
-        durable: false
-    });
+    channel.assertQueue(queue, {durable: false});
     channel.prefetch(1);
     console.log(' [x] Awaiting RPC requests');
     channel.consume(queue, function reply(msg) {
         console.log(" [x] Received 1/2 %s", msg.content.toString());
+
         // DO DB STUFF
         if(msg.content.toString() === "read-all") {
-            r = 10;
-        }else{
-            r = 11;
-        }
-        channel.sendToQueue(msg.properties.replyTo,Buffer.from(r.toString()), {
-            correlationId: msg.properties.correlationId
-        });
-        console.log(" [x] Received 2/2 %s", msg.content.toString());
-        channel.ack(msg);
-    });
-    });
-});
+            console.log("Entered read-all")
+            getCustomers().then((result) => {
+                channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
+                    correlationId: msg.properties.correlationId
+                });
+                console.log(" [x] Received 2/2 %s", msg.content.toString());
+                channel.ack(msg);
+            });
 
+        }else if(msg.content.toString() === "read-single") {
+            console.log("Entered read-single")
+            getSingleCustomer({id: 1}).then((result) => {
+                channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
+                    correlationId: msg.properties.correlationId
+                });
+                console.log(" [x] Received 2/2 %s", msg.content.toString());
+                channel.ack(msg);
+            }
+            );
+        }else if(msg.content.toString() === "read-deleted") {
+            console.log("Entered read-deleted")
+            getDeletedCustomers().then((result) => {
+                channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
+                    correlationId: msg.properties.correlationId
+                });
+                console.log(" [x] Received 2/2 %s", msg.content.toString());
+                channel.ack(msg);
+            });
+        }else if(msg.content.toString() === "update") {
+            console.log("Entered update");
+            updateCustomer({id: 1, firstname: "test", lastname:"lastname", age:80, email:"@mail.dk", password:"HelloAdgangskode"}).then((result) => {
+                channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
+                    correlationId: msg.properties.correlationId
+                });
+                console.log(" [x] Received 2/2 %s", msg.content.toString());
+                channel.ack(msg);
+            });
+        }else if(msg.content.toString() === "delete") {
+            console.log("Entered delete");
+            deleteCustomer({id: 1}).then((result) => {
+                channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
+                    correlationId: msg.properties.correlationId
+                });
+                console.log(" [x] Received 2/2 %s", msg.content.toString());
+                channel.ack(msg);
+            });
+        }else if(msg.content.toString() === "create") {
+            console.log("Entered create");
+            createCustomer({firstname: "NyCus", lastname:"nyCustomerLast", age:80, email:"email@mail", password:"HelloAdgangskode"}).then((result) => {
+                channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
+                    correlationId: msg.properties.correlationId
+                });
+                console.log(" [x] Received 2/2 %s", msg.content.toString());
+                channel.ack(msg);
+            });
+        }
+    });
+    } catch (error) {
+        console.log(error);
+    }
+};
+connectRabbit();
+
+// --- START SERVER ---
 const PORT = process.env.PORT ||  5050;
 app.listen(PORT, () => console.log("Server running on:", PORT));
