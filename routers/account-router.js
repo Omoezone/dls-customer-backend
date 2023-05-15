@@ -143,16 +143,14 @@ async function updateAccount(values) {
 // DELETE AN ACCOUNT FOR A CUSTOMER
 // again not sure if an account should be allowed to be deleted
 router.post("/delete_account", async (req, res) => {
-    conn.getConnection(function (err, connection) {
-        if (err) {connection.release();throw err}
-        const delete_account = 'UPDATE accounts SET deleted=true, deleted_at=current_timestamp() WHERE id=?;';
-        connection.query(delete_account, [req.body.id], function (err, results, fields) {
-            if (err) {connection.release();throw err}
-            console.log('--- Account has been deleted! ---')
-            });
-        res.status(200).send("Account deleted")
-        connection.release();
-    });
+    try{
+        const result = await deleteAccount(req.body);
+        console.log("the result recieved from deleteAccount function", result);
+        res.status(200).json("-- Account has been deleted --");
+    }catch(err){
+        console.log(err);
+        res.status(500).json("Internal server error, or non existing user");
+    }
 });
 
 async function deleteAccount(id) {
@@ -174,22 +172,31 @@ async function deleteAccount(id) {
 
 // SHOW BALANCE FOR AN ACCOUNT
 router.get("/balance/:account_id", async (req, res) => {
-    conn.getConnection(function (err, connection) {
-        if (err) {connection.release();throw err}
-        const select_balance = 'SELECT SUM(amount) AS balance FROM transactions_data WHERE sender_account_id=? or reciever_account_id=?;';
-        connection.query(select_balance, [req.params.account_id, req.params.account_id], function (err, result) {
-            if (err) {connection.release();throw err}
-            if(result.length === 0) {
-                res.status(404).send('account not found or it/they might be deleted');
-                connection.release();
-            }else{
-                console.log('balance for account_id: ' + req.params.account_id + ': ', result);
-                res.status(200).send(result);
-                connection.release();
-            }
-        });
-    });
+    try{
+        const result = await getBalance(req.params.account_id);
+        console.log("the result recieved from getBalance function", result);
+        res.status(200).json(result);
+    }catch(err){
+        console.log(err);
+        res.status(500).json("Internal server error, or non existing user");
+    }
 });
+
+async function getBalance(id) {
+    if (typeof id === "object") {
+        id = id.id;
+    }
+    const connection = await conn.getConnection();
+    try {
+        const [rows] = await connection.query('SELECT SUM(amount) AS balance FROM transactions_data WHERE sender_account_id=? or reciever_account_id=?;', [id, id]);
+        console.log('Balance for account with id: ' + id + ' selected!\n ', rows)
+        connection.release();
+        return rows;
+    } catch (err) {
+        connection.release();
+        throw err;
+    }
+}
 
 
 export default router;
