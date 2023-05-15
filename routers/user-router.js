@@ -102,6 +102,7 @@ router.post("/customer", async (req, res) => {
 });
 
 export async function createCustomer(values){
+    // FIND UD AF HVORDAN RABBITMQ SKAL HÅNDTERER DETTE
     values.password = await bcrypt.hash(values.password, 10);
     const connection = await conn.getConnection();
     try{
