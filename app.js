@@ -70,17 +70,15 @@ async function connectRabbit() {
                 console.log(" [x] Received 2/2 %s", msg.content.toString());
                 channel.ack(msg);
             });
-
         }else if(msg.content.toString() === "read-single") {
             console.log("Entered read-single")
-            getSingleCustomer({id: 1}).then((result) => {
+            getSingleCustomer(msg.properties.headers.body.id).then((result) => {
                 channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
                     correlationId: msg.properties.correlationId
                 });
                 console.log(" [x] Received 2/2 %s", msg.content.toString());
                 channel.ack(msg);
-            }
-            );
+            });
         }else if(msg.content.toString() === "read-deleted") {
             console.log("Entered read-deleted")
             getDeletedCustomers().then((result) => {
@@ -92,7 +90,14 @@ async function connectRabbit() {
             });
         }else if(msg.content.toString() === "update") {
             console.log("Entered update");
-            updateCustomer({id: 1, firstname: "test", lastname:"lastname", age:80, email:"@mail.dk", password:"HelloAdgangskode"}).then((result) => {
+            updateCustomer({
+                id: msg.properties.headers.body.id, 
+                firstname: msg.properties.headers.body.firstname, 
+                lastname:msg.properties.headers.body.lastname, 
+                age:msg.properties.headers.body.lastname, 
+                email:msg.properties.headers.body.email, 
+                password:msg.properties.headers.body.password
+            }).then((result) => {
                 channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
                     correlationId: msg.properties.correlationId
                 });
@@ -101,7 +106,7 @@ async function connectRabbit() {
             });
         }else if(msg.content.toString() === "delete") {
             console.log("Entered delete");
-            deleteCustomer({id: 1}).then((result) => {
+            deleteCustomer({id: msg.properties.headers.body.id}).then((result) => {
                 channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
                     correlationId: msg.properties.correlationId
                 });
@@ -109,8 +114,14 @@ async function connectRabbit() {
                 channel.ack(msg);
             });
         }else if(msg.content.toString() === "create") {
-            console.log("Entered create");
-            createCustomer({firstname: "NyCus", lastname:"nyCustomerLast", age:80, email:"email@mail", password:"HelloAdgangskode"}).then((result) => {
+            console.log("Entered create: ", msg.properties.headers.body);
+            createCustomer({
+                firstname: msg.properties.headers.body.firstname, 
+                lastname:msg.properties.headers.body.lastname, 
+                age:msg.properties.headers.body.age, 
+                email:msg.properties.headers.body.email, 
+                password:msg.properties.headers.body.password
+            }).then((result) => {
                 channel.sendToQueue(msg.properties.replyTo,Buffer.from(result.toString()), {
                     correlationId: msg.properties.correlationId
                 });

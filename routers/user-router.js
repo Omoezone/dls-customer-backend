@@ -58,7 +58,11 @@ export async function getSingleCustomer(id) {
     const connection = await conn.getConnection();
     try {
         const [rows] = await connection.query('SELECT * FROM customers c JOIN customers_data cd ON c.id = cd.customer_id WHERE (cd.customer_id, cd.snap_timestamp) IN (SELECT customer_id, MAX(snap_timestamp) FROM customers_data GROUP BY customer_id) AND c.deleted=false AND c.id=?;', [id]);
-        console.log('User with id: ' + id + ' selected!\n ', rows)
+        if (rows == []) {
+            console.log('No user with id: ' + id + ' found!')
+        } else {
+            console.log('User with id: ' + id + ' selected!\n ', rows)
+        }
         connection.release();
         return rows;
     } catch (err) {
