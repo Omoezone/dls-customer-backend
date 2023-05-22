@@ -45,7 +45,6 @@ async function recieveFromQueue() {
     const responseQueueName = 'responsecm';
 
     const serviceBusClient = new ServiceBusClient(connectionString);
-
     const requestReceiver = serviceBusClient.createReceiver(requestQueueName);
 
     while (true) {
