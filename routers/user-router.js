@@ -29,8 +29,9 @@ router.get("/customers", async (req, res) => {
 export async function getCustomers() {
     const connection = await conn.getConnection();
     try {
-        const [rows] = await connection.query('SELECT * FROM customers c JOIN customers_data cd ON c.id = cd.customer_id WHERE (cd.customer_id, cd.snap_timestamp) IN (SELECT customer_id, MAX(snap_timestamp) FROM customers_data GROUP BY customer_id) AND c.deleted=false;');
+        let [rows] = await connection.query('SELECT * FROM customers c JOIN customers_data cd ON c.id = cd.customer_id WHERE (cd.customer_id, cd.snap_timestamp) IN (SELECT customer_id, MAX(snap_timestamp) FROM customers_data GROUP BY customer_id) AND c.deleted=false;');
         connection.release();
+        rows = JSON.parse(JSON.stringify(rows))
         return rows;
     } catch (err) {
         connection.release();
@@ -106,7 +107,6 @@ router.post("/customer", async (req, res) => {
 });
 
 export async function createCustomer(values){
-    // FIND UD AF HVORDAN RABBITMQ SKAL HÅNDTERER DETTE
     values.password = await bcrypt.hash(values.password, 10);
     const connection = await conn.getConnection();
     try{
