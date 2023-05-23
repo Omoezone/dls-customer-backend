@@ -389,7 +389,7 @@
 
 /**
  * @openapi
- * /transaction/{id}:
+ * /transaction/{accountId}:
  *   get:
  *     tags:
  *      - Transaction
@@ -397,7 +397,7 @@
  *     description: get all transactions for a specific account
  *     parameters:
  *     - in: path
- *       name: account_id
+ *       name: accountId
  *       schema:
  *         type: integer
  *       required: true

@@ -48,6 +48,7 @@ async function createTransaction(values){
 
 router.get("/transaction/:account_id", async (req, res) => {
     try{
+        // to work with swagger use req.params.account_id instead of req.body.accountId
         const result = await getTransactionsById(req.body.accountId);
         console.log("the result recieved from getTransactions function", result);
         res.status(200).send(result);
@@ -59,6 +60,7 @@ router.get("/transaction/:account_id", async (req, res) => {
 
 async function getTransactionsById(id){
     const connection = await conn.getConnection();
+    console.log(id)
     try{
         const [rows] = await connection.query(`SELECT * FROM transactions t JOIN transactions_data td ON t.id = td.transaction_id WHERE td.sender_account_id = ?;`, [id]);
         console.log('Selected ' + rows.length + ' row(s).');
