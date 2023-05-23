@@ -46,8 +46,18 @@ router.post("/transaction", async (req, res) => {
     }
     });
 });
-
-
+router.get("/transaction/:id", async (req, res) => {
+    conn.getConnection((err, connection) => {
+        if (err) {connection.release(); throw err;}
+        connection.query(`SELECT * from transactions t JOIN transactions_data td on t.id = td.transaction_id WHERE td.sender_account_id = ?;`, [req.body.id], (err, results) => {
+            if (err) {connection.release(); throw err;}
+            else console.log('Selected ' + results.length + ' row(s).');
+            connection.release();
+            res.status(200).send(results);
+            console.log('--- Selecting all active transactions done! ---');
+        });
+    });
+});
 
 
 /**
