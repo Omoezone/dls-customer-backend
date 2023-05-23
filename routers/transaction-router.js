@@ -48,7 +48,7 @@ async function createTransaction(values){
 
 router.get("/transaction/:account_id", async (req, res) => {
     try{
-        const result = await getTransactionsById(req.body.account_id);
+        const result = await getTransactionsById(req.body.accountId);
         console.log("the result recieved from getTransactions function", result);
         res.status(200).send(result);
     }catch(err){
