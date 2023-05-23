@@ -8,57 +8,67 @@ router.use(express.json());
 
 // CREATE A NEW TRANSACTION TODO: SØRG FOR AT ERRORS INDE I transaction bliver exit hvis fejl
 router.post("/transaction", async (req, res) => {
-    conn.getConnection(async (err, connection) => {
-        if (err) {connection.release(); throw err;}
-        try{
-        connection.beginTransaction(function(err) {
-            const create_sender = 'INSERT INTO transactions_data (transaction_id, sender_account_id, reciever_account_id,amount) VALUES (?,?,?,?)';    
-            // CREATE TRANSACTION FOR SENDER
-            connection.query('INSERT INTO transactions () VALUES ()',  (err, result) => {
-                if (err) {connection.release(); throw err;}
-                const transaction_sender_id = result.insertId;
-                
-                console.log("trans id", transaction_sender_id)
-                connection.query(create_sender, [transaction_sender_id, req.body.sender_account_id, req.body.reciever_account_id, req.body.amount], (err, result) => {
-                    if (err) {connection.release(); throw err;}
-                    console.log('Created Sender Transaction');
-                });
-            });
-            // CREATE TRANSACTION FOR reciever
-            connection.query('INSERT INTO transactions () VALUES ()',  (err, result) => {
-                if (err) {connection.release(); throw err;}
-                const transaction_reciever_id = result.insertId;
-                connection.query(create_sender, [transaction_reciever_id, req.body.reciever_account_id, req.body.sender_account_id, -(req.body.amount)], (err, result) => {
-                    if (err) {connection.release(); throw err;}
-                    console.log('Created reciever Transaction');
-                });
-            });
-        // COMMIT CHANGES
-        console.log("beginning commit")
-        connection.commit()
-        });
-        } catch(error) {
-            connection.rollback()
-            throw error;
-        }finally{
-            res.status(200).send("transaction created");
-            connection.release();
+    try{
+        const result = await createTransaction(req.body);
+        console.log("the result recieved from createTransaction function", result);
+        res.status(200).send(result);
+    }catch(err){
+        console.log(err);
+        res.status(500).send("Internal server error when creating transaction");
     }
-    });
-});
-router.get("/transaction/:id", async (req, res) => {
-    conn.getConnection((err, connection) => {
-        if (err) {connection.release(); throw err;}
-        connection.query(`SELECT * from transactions t JOIN transactions_data td on t.id = td.transaction_id WHERE td.sender_account_id = ?;`, [req.body.id], (err, results) => {
-            if (err) {connection.release(); throw err;}
-            else console.log('Selected ' + results.length + ' row(s).');
-            connection.release();
-            res.status(200).send(results);
-            console.log('--- Selecting all active transactions done! ---');
-        });
-    });
 });
 
+async function createTransaction(values){
+    const connection = await conn.getConnection();
+    try{
+        await connection.beginTransaction();
+        console.log("entered transaction");
+        const create_sender = 'INSERT INTO transactions_data (transaction_id, sender_account_id, reciever_account_id,amount) VALUES (?,?,?,?)';
+        const create_reciever = 'INSERT INTO transactions_data (transaction_id, sender_account_id, reciever_account_id,amount) VALUES (?,?,?,?)';
+        // ----- Create transaction for sender -----
+        const sender = await connection.query('INSERT INTO transactions () VALUES ()');
+        const senderData = await connection.query(create_sender, [sender[0].insertId, values.sender_account_id, values.reciever_account_id, values.amount]);
+        console.log(senderData)
+        // ----- Create transaction for reciever -----
+        const reciever = await connection.query('INSERT INTO transactions () VALUES ()');
+        const recieverData = await connection.query(create_reciever, [reciever[0].insertId, values.reciever_account_id, values.sender_account_id, -(values.amount)]);
+        console.log(recieverData)
+        // ----- Commit changes -----
+        await connection.commit();
+        return "Transaction created";
+    }catch(err){
+        console.log("rolling back transactions")
+        await connection.rollback();
+        throw err;
+    }finally{
+        connection.release();
+    }
+}
+
+
+router.get("/transaction/:account_id", async (req, res) => {
+    try{
+        const result = await getTransactionsById(req.body.account_id);
+        console.log("the result recieved from getTransactions function", result);
+        res.status(200).send(result);
+    }catch(err){
+        console.log(err);
+        res.status(500).send("Internal server error when getting transactions");
+    }
+});
+
+async function getTransactionsById(id){
+    const connection = await conn.getConnection();
+    try{
+        const [rows] = await connection.query(`SELECT * FROM transactions t JOIN transactions_data td ON t.id = td.transaction_id WHERE td.sender_account_id = ?;`, [id]);
+        console.log('Selected ' + rows.length + ' row(s).');
+        connection.release();
+        return rows;
+    }catch(err){
+        connection.release();
+        throw err;
+    }
+}
 
 /**
  * Når man laver en transaction for en customer, bør følgende ske:
@@ -70,21 +80,28 @@ router.get("/transaction/:id", async (req, res) => {
 
 // GET ALL TRANSACTIONS
 router.get("/transactions", async (req, res) => {
-    conn.getConnection((err, connection) => {
-        if (err) {connection.release(); throw err;}
-        connection.query(`SELECT * FROM transactions t JOIN transactions_data td ON t.id = td.transaction_id`, function (err, results) {
-            if (err) {connection.release(); throw err;}
-            else console.log('Selected ' + results.length + ' row(s).');
-            res.status(200).send(results);
-            connection.release();
-            console.log('--- Selecting all active transactions done! ---');
-        });
-    });
+    try{
+        const result = await getTransactions();
+        console.log("the result recieved from getTransactions function", result);
+        res.status(200).send(result);
+    }catch(err){
+        console.log(err);
+        res.status(500).send("Internal server error when getting transactions");
+    }
 });
 
-// UPDATE A TRANSACTION
-
-// DELETE A TRANSACTION
+async function getTransactions(){
+    const connection = await conn.getConnection();
+    try{
+        const [rows] = await connection.query(`SELECT * FROM transactions t JOIN transactions_data td ON t.id = td.transaction_id`);
+        console.log('Selected ' + rows.length + ' row(s).');
+        connection.release();
+        return rows;
+    }catch(err){
+        connection.release();
+        throw err;
+    }
+}
 
 
 export default router;

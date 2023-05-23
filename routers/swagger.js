@@ -386,3 +386,27 @@
  *    404:
  *     description: No account found
  */
+
+/**
+ * @openapi
+ * /transaction/{id}:
+ *   get:
+ *     tags:
+ *      - Transaction
+ *     summary: Get all transactions for a specific account
+ *     description: get all transactions for a specific account
+ *     parameters:
+ *     - in: path
+ *       name: account_id
+ *       schema:
+ *         type: integer
+ *       required: true
+ *       description: Numeric ID of the account to get
+ *     responses:
+ *       200:
+ *         description: A successful response
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Customer not found
+*/
