@@ -336,6 +336,30 @@
  *         description: Customer not found
 */
 
+/**
+ * @openapi
+ * /allBalance/{customer_id}:
+ *   get:
+ *     tags:
+ *      - Account
+ *     summary: Get the balance for all accounts for a customer
+ *     description: Returns the balance for accounts based on the customer_id
+ *     parameters:
+ *     - in: path
+ *       name: customer_id
+ *       schema:
+ *         type: integer
+ *       required: true
+ *       description: Numeric ID of the account to get
+ *     responses:
+ *       200:
+ *         description: A successful response
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Customer not found
+*/
+
 // ----- TRANSACTION ROUTES -----
 
 // ----- GET ALL TRANSACTIONS -----
@@ -410,3 +434,4 @@
  *       404:
  *         description: Customer not found
 */
+

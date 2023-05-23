@@ -198,5 +198,32 @@ async function getBalance(id) {
     }
 }
 
+router.get("/allBalance/:customer_id", async (req, res) => {
+    try{
+        const result = await getBalanceByCustomer(req.params.customer_id || req.body.customer_id);
+        console.log("the result recieved from getBalanceByCustomer function", result);
+        res.status(200).json(result);
+    }catch(err){
+        console.log(err);
+        res.status(500).json("Internal server error, or non existing user");
+    }
+});
+
+async function getBalanceByCustomer(id) {
+    if (typeof id === "object") {
+        id = id.id;
+    }
+    const connection = await conn.getConnection();
+    try {
+        const [rows] = await connection.query('SELECT a.account_id, a.title, SUM(t.amount) AS balance FROM accounts_data AS a JOIN transactions_data AS t ON a.account_id = t.sender_account_id JOIN customers_data AS c ON a.customer_id = c.customer_id WHERE c.customer_id = ? GROUP BY a.account_id, a.title;', [id]);
+        console.log('Balance for customer with id: ' + id + ' selected!\n ', rows)
+        connection.release();
+        return rows;
+    } catch (err) {
+        connection.release();
+        throw err;
+    }
+}
+
 
 export default router;
