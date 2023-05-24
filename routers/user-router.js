@@ -4,25 +4,25 @@ import axios from "axios";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import { authenticateToken } from "./auth-router.js";
+import logger from '../utils/logger.js';
 
 dotenv.config({ path: "./.env" });
 const router = express.Router();
 router.use(express.json());
 
-
 // Default route
 router.get("/", (req, res) => {
-    res.send("Welcome to customer frontpage!")
+    res.send("Welcome to customer frontpage!");
 })
 
 // Get all customers with customer_data joined
 router.get("/customers", authenticateToken, async (req, res) => {
-    try{
+    try {
         const result = await getCustomers();
-        console.log("the result recieved from getCustomers function", result);
+        logger.verbose("the result recieved from getCustomers function", result);
         res.status(200).json(result);
-    }catch(err){    
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).json("Internal server error");
     }
 });
@@ -32,22 +32,24 @@ export async function getCustomers() {
     try {
         let [rows] = await connection.query('SELECT * FROM customers c JOIN customers_data cd ON c.id = cd.customer_id WHERE (cd.customer_id, cd.snap_timestamp) IN (SELECT customer_id, MAX(snap_timestamp) FROM customers_data GROUP BY customer_id) AND c.deleted=false;');
         connection.release();
-        rows = JSON.parse(JSON.stringify(rows))
+        rows = JSON.parse(JSON.stringify(rows));
         return rows;
     } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
 }
 
 // Get a single customer by id with customer_data joined
+
 router.get("/customers/:id", authenticateToken, async (req, res) => { 
     try{
         const result = await getSingleCustomer(req.params.id || req.body.id);
-        console.log("the result recieved from getSingleCustomer function", result);
+        logger.verbose("the result recieved from getSingleCustomer function", result);
         res.status(200).json(result);
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).json("Internal server error, or non existing user");
     }
 });
@@ -61,13 +63,14 @@ export async function getSingleCustomer(id) {
     try {
         const [rows] = await connection.query('SELECT * FROM customers c JOIN customers_data cd ON c.id = cd.customer_id WHERE (cd.customer_id, cd.snap_timestamp) IN (SELECT customer_id, MAX(snap_timestamp) FROM customers_data GROUP BY customer_id) AND c.deleted=false AND c.id=?;', [id]);
         if (rows == []) {
-            console.log('No user with id: ' + id + ' found!')
+            logger.verbose('No user with id: ' + id + ' found!');
         } else {
-            console.log('User with id: ' + id + ' selected!\n ', rows)
+            logger.verbose('User with id: ' + id + ' selected!\n ', rows);
         }
         connection.release();
         return rows;
     } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
@@ -78,8 +81,8 @@ router.get("/customers_deleted", authenticateToken, async (req, res) => {
     try{
         const result = await getDeletedCustomers();
         res.status(200).json(result);
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).json("Internal server error, or no deleted users");
     }
 });
@@ -91,6 +94,7 @@ export async function getDeletedCustomers() {
         connection.release();
         return rows;
     } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
@@ -98,32 +102,33 @@ export async function getDeletedCustomers() {
 
 // create customer and customer_data related to that customer
 router.post("/customer", async (req, res) => {
-    try{
+    try {
         const result = await createCustomer(req.body);
         res.status(200).json(result);
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).json("Internal server error");
     }
 });
 
-export async function createCustomer(values){
+export async function createCustomer(values) {
     values.password = await bcrypt.hash(values.password, 10);
     const connection = await conn.getConnection();
-    try{
+    try {
         await connection.query('INSERT INTO customers () VALUES ();');
         let [rowsC] = await connection.query('SELECT LAST_INSERT_ID();');
         let lastInsertedId = rowsC[0]['LAST_INSERT_ID()'];
 
-        await connection.query('INSERT INTO customers_data (customer_id, first_name, last_name, age, email, pass) VALUES (?,?,?,?,?,?);',[lastInsertedId, values.firstname, values.lastname, values.age, values.email, values.password]);
-    // --------------  THIS PART CREATES AN ACCOUNT FOR THE NEWLY CREATED CUSTOMER ----------------
+        await connection.query('INSERT INTO customers_data (customer_id, first_name, last_name, age, email, pass) VALUES (?,?,?,?,?,?);', [lastInsertedId, values.firstname, values.lastname, values.age, values.email, values.password]);
+        // --------------  THIS PART CREATES AN ACCOUNT FOR THE NEWLY CREATED CUSTOMER ----------------
 
         await connection.query('INSERT INTO accounts () VALUES ();');
         let [rowsA] = await connection.query('SELECT LAST_INSERT_ID();');
         let lastInsertedIdAccount = rowsA[0]['LAST_INSERT_ID()'];
 
-        await connection.query('INSERT INTO accounts_data (account_id, customer_id) VALUES (?,?);',[lastInsertedIdAccount, lastInsertedId]);
-    }catch(err){
+        await connection.query('INSERT INTO accounts_data (account_id, customer_id) VALUES (?,?);', [lastInsertedIdAccount, lastInsertedId]);
+    } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
@@ -131,7 +136,7 @@ export async function createCustomer(values){
     // send email to customer 
     // await azureMailFunction(values.email, values.firstname);
     return "customer added";
-}   
+}
 
 // UPDATE CUSTOMER
 router.post("/update_customer", authenticateToken, async (req, res) => {
@@ -140,8 +145,8 @@ router.post("/update_customer", authenticateToken, async (req, res) => {
         const result = await updateCustomer(req.body);
         res.status(200).json(result);
     }
-    catch(err){
-        console.log(err);
+    catch (err) {
+        logger.error(err);
         res.status(500).json("Internal server error, or non existing user");
     }
 });
@@ -155,6 +160,7 @@ export async function updateCustomer(value) {
         connection.release();
         return rows;
     } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
@@ -166,8 +172,8 @@ router.post("/delete_customer", authenticateToken, async (req, res) => {
         const result = await deleteCustomer(req.body);
         res.status(200).json(result);
     }
-    catch(err){
-        console.log(err);
+    catch (err) {
+        logger.error(err);
         res.status(500).json("Internal server error, or non existing user");
     }
 });
@@ -180,10 +186,11 @@ export async function deleteCustomer(id) {
     try {
         const [rows] = await connection.query('UPDATE customers SET deleted=true, deleted_at=current_timestamp() WHERE id=?;', [id]);
         connection.release();
-        console.log("--- Customer has been deleted ---")
+        logger.info("--- Customer has been deleted ---");
         return rows;
     }
     catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
@@ -193,12 +200,12 @@ export async function deleteCustomer(id) {
 async function azureMailFunction(email, firstname) {
     try {
         const url = process.env.FUNCTION_AZURE_URL;
-        const requestBody = {subscriber_email: email, subscriber_name: firstname};
-        
+        const requestBody = { subscriber_email: email, subscriber_name: firstname };
+
         const response = await axios.post(url, requestBody);
-        console.log('Response:', response.data);
+        logger.verbose('Response:', response.data);
     } catch (error) {
-        console.error('Error with azureMailFunction:', error.response.data);
+        logger.error('Error with azureMailFunction:', error.response.data);
     }
 };
 
