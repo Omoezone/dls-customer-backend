@@ -16,7 +16,7 @@ router.get("/", (req, res) => {
 })
 
 // Get all customers with customer_data joined
-router.get("/customers", authenticateToken, async (req, res) => {
+router.get("/customers", authenticateToken, authenticateToken, async (req, res) => {
     try{
         const result = await getCustomers();
         console.log("the result recieved from getCustomers function", result);
@@ -97,7 +97,7 @@ export async function getDeletedCustomers() {
 }
 
 // create customer and customer_data related to that customer
-router.post("/customer", async (req, res) => {
+router.post("/customer", authenticateToken, async (req, res) => {
     try{
         const result = await createCustomer(req.body);
         res.status(200).json(result);
@@ -129,7 +129,7 @@ export async function createCustomer(values){
     }
     connection.release();
     // send email to customer 
-    // await azureMailFunction(values.email, values.firstname);
+    await azureMailFunction(values.email, values.firstname);
     return "customer added";
 }   
 

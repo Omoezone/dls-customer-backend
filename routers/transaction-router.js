@@ -1,5 +1,6 @@
 import express from "express";
 import conn from "./startConnection.js";
+import { authenticateToken } from "./auth-router.js";
 
 const router = express.Router();
 router.use(express.json());
@@ -7,7 +8,7 @@ router.use(express.json());
 // GET ALL TRANSACTIONS FOR A SPECIFIC ACCOUNT
 
 // CREATE A NEW TRANSACTION TODO: SØRG FOR AT ERRORS INDE I transaction bliver exit hvis fejl
-router.post("/transaction", async (req, res) => {
+router.post("/transaction", authenticateToken, async (req, res) => {
     try{
         const result = await createTransaction(req.body);
         console.log("the result recieved from createTransaction function", result);
@@ -46,7 +47,7 @@ async function createTransaction(values){
 }
 
 
-router.get("/transaction/:account_id", async (req, res) => {
+router.get("/transaction/:account_id", authenticateToken, async (req, res) => {
     try{
         // to work with swagger use req.params.account_id instead of req.body.accountId
         const result = await getTransactionsById(req.body.accountId);
@@ -81,7 +82,7 @@ async function getTransactionsById(id){
 */
 
 // GET ALL TRANSACTIONS
-router.get("/transactions", async (req, res) => {
+router.get("/transactions", authenticateToken, async (req, res) => {
     try{
         const result = await getTransactions();
         console.log("the result recieved from getTransactions function", result);

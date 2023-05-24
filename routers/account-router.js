@@ -59,7 +59,7 @@ async function getAccountsForCustomer(id) {
 
 //GET A SPECIFIK ACCOUNT FOR A CUSTOMER BY ACCOUNT ID
 // REQUIRED = account_id, customer_id
-router.post("/account_id", async (req, res) => {
+router.post("/account_id", authenticateToken, async (req, res) => {
     try{
         const result = await getSingleAccount(req.body);
         console.log("the result recieved from getSingleAccount function", result);
@@ -85,7 +85,7 @@ async function getSingleAccount(values) {
 }
 
 // CREATE A NEW ACCOUNT FOR A CUSTOMER
-router.post("/account", async (req, res) => {
+router.post("/account", authenticateToken, async (req, res) => {
     try{
         const result = await createAccount(req.body.customer_id);
         console.log("the result recieved from createAccount function", result);
@@ -116,7 +116,7 @@ async function createAccount(id) {
 }
 // UPDATE AN ACCOUNT FOR A CUSTOMER
 // not sure if this should even be allowed to be changed/updated
-router.post("/update_account", async (req, res) => {
+router.post("/update_account", authenticateToken, async (req, res) => {
     try{
         const result = await updateAccount(req.body);
         console.log("the result recieved from updateAccount function", result);
@@ -143,7 +143,7 @@ async function updateAccount(values) {
 
 // DELETE AN ACCOUNT FOR A CUSTOMER
 // again not sure if an account should be allowed to be deleted
-router.post("/delete_account", async (req, res) => {
+router.post("/delete_account", authenticateToken, async (req, res) => {
     try{
         const result = await deleteAccount(req.body);
         console.log("the result recieved from deleteAccount function", result);
@@ -172,7 +172,7 @@ async function deleteAccount(id) {
 }
 
 // SHOW BALANCE FOR AN ACCOUNT
-router.get("/balance/:account_id", async (req, res) => {
+router.get("/balance/:account_id", authenticateToken, async (req, res) => {
     try{
         const result = await getBalance(req.params.account_id || req.body.account_id);
         console.log("the result recieved from getBalance function", result);
@@ -199,7 +199,7 @@ async function getBalance(id) {
     }
 }
 
-router.get("/allBalance/:customer_id", async (req, res) => {
+router.get("/allBalance/:customer_id", authenticateToken, async (req, res) => {
     try{
         const result = await getBalanceByCustomer(req.params.customer_id || req.body.customer_id);
         console.log("the result recieved from getBalanceByCustomer function", result);
