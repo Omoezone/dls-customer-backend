@@ -1,13 +1,11 @@
 import express from "express";
 import conn from "./startConnection.js";
-mport logger from '../utils/logger.js';
+import logger from '../utils/logger.js';
 import { authenticateToken } from "./auth-router.js";
 const router = express.Router();
 router.use(express.json());
 
 // GET ALL TRANSACTIONS FOR A SPECIFIC ACCOUNT
-
-// CREATE A NEW TRANSACTION TODO: SØRG FOR AT ERRORS INDE I transaction bliver exit hvis fejl
 router.post("/transaction", authenticateToken, async (req, res) => {
     try{
         const result = await createTransaction(req.body);
