@@ -97,7 +97,7 @@ export async function getDeletedCustomers() {
 }
 
 // create customer and customer_data related to that customer
-router.post("/customer", authenticateToken, async (req, res) => {
+router.post("/customer", async (req, res) => {
     try{
         const result = await createCustomer(req.body);
         res.status(200).json(result);
