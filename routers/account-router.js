@@ -53,7 +53,7 @@ async function getAccountsForCustomer(id) {
     }
     const connection = await conn.getConnection();
     try {
-        const [rows] = await connection.query('SELECT * FROM accounts a JOIN accounts_data ad ON a.id = ad.account_id WHERE a.deleted=false AND a.id=?;', [id]);
+        const [rows] = await connection.query('SELECT * FROM accounts a JOIN accounts_data ad ON a.id = ad.account_id WHERE a.deleted=false AND ad.customer_id=?;', [id]);
         console.log('Account with id: ' + id + ' selected!\n ', rows);
         connection.release();
         return rows;
