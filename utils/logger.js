@@ -38,31 +38,31 @@ const transports = [
     new winston.transports.Console(),
     // Print all the error messages inside the error.log file
     new winston.transports.File({
-        filename: 'logs/admin-error.log',
+        filename: 'logs/customer-error.log',
         level: 'error',
     }),
     new winston.transports.File({
-        filename: 'logs/admin-warn.log',
+        filename: 'logs/customer-warn.log',
         level: 'warn',
     }),
     new winston.transports.File({
-        filename: 'logs/admin-info.log',
+        filename: 'logs/customer-info.log',
         level: 'info',
     }),
     new winston.transports.File({
-        filename: 'logs/admin-http.log',
+        filename: 'logs/customer-http.log',
         level: 'http',
     }),
     new winston.transports.File({
-        filename: 'logs/admin-verbose.log',
+        filename: 'logs/customer-verbose.log',
         level: 'verbose',
     }),
     new winston.transports.File({
-        filename: 'logs/admin-debug.log',
+        filename: 'logs/customer-debug.log',
         level: 'debug',
     }),
     // Print all the error message inside the all.log file
-    new winston.transports.File({ filename: 'logs/admin-all.log' }),
+    new winston.transports.File({ filename: 'logs/customer-all.log' }),
 ]
 
 const logger = winston.createLogger({

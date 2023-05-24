@@ -106,4 +106,29 @@ async function getTransactions() {
     }
 }
 
+router.get("/getAllTransactions/:customer_id", authenticateToken, async (req, res) => {
+    try{
+        const result = await allTransForCustomer(req.params);
+        logger.verbose("the result recieved from getTransactions function", result);
+        res.status(200).send(result);
+    } catch (err) {
+        logger.error(err);
+        res.status(500).send("Internal server error when getting transactions, check the customer id");
+    }
+});
+
+async function allTransForCustomer(value) {
+    const connection = await conn.getConnection();
+    console.log(value)
+    try {
+        const [rows] = await connection.query(`SELECT t.* FROM transactions_data t JOIN accounts_data a ON t.sender_account_id = a.account_id JOIN customers_data c ON a.customer_id = c.customer_id WHERE c.customer_id = ?;`, [value.customer_id]);
+        logger.verbose('Selected ' + rows.length + ' row(s).');
+        connection.release();
+        return rows;
+    } catch (err) {
+        logger.error(err);
+        connection.release();
+        throw err;
+    }
+}
 export default router;

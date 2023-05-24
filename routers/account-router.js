@@ -65,7 +65,6 @@ async function getAccountsForCustomer(id) {
 }
 
 //GET A SPECIFIK ACCOUNT FOR A CUSTOMER BY ACCOUNT ID
-// REQUIRED = account_id, customer_id
 router.post("/account_id", authenticateToken, async (req, res) => {
     try{
         const result = await getSingleAccount(req.body);
