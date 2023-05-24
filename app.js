@@ -3,6 +3,7 @@ import userRouter from "./routers/user-router.js";
 import {getCustomers, getSingleCustomer, getDeletedCustomers, updateCustomer, deleteCustomer, createCustomer} from "./routers/user-router.js";
 import accountRouter from "./routers/account-router.js";
 import transactionRouter from "./routers/transaction-router.js";
+import authRouter from "./routers/auth-router.js";
 import { ServiceBusClient } from "@azure/service-bus";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(userRouter);
 app.use(accountRouter);
 app.use(transactionRouter);
+app.use(authRouter);
 
 // Swagger Options, used for documentation and UI
 const options = {

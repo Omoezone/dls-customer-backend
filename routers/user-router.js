@@ -3,6 +3,7 @@ import conn from "./startConnection.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import { authenticateToken } from "./auth-router.js";
 
 dotenv.config({ path: "./.env" });
 const router = express.Router();
@@ -15,7 +16,7 @@ router.get("/", (req, res) => {
 })
 
 // Get all customers with customer_data joined
-router.get("/customers", async (req, res) => {
+router.get("/customers", authenticateToken, async (req, res) => {
     try{
         const result = await getCustomers();
         console.log("the result recieved from getCustomers function", result);

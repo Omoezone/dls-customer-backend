@@ -173,7 +173,7 @@ async function deleteAccount(id) {
 // SHOW BALANCE FOR AN ACCOUNT
 router.get("/balance/:account_id", async (req, res) => {
     try{
-        const result = await getBalance(req.params.account_id);
+        const result = await getBalance(req.params.account_id || req.body.account_id);
         console.log("the result recieved from getBalance function", result);
         res.status(200).json(result);
     }catch(err){
