@@ -121,7 +121,7 @@ async function allTransForCustomer(value) {
     const connection = await conn.getConnection();
     console.log(value)
     try {
-        const [rows] = await connection.query(`SELECT t.* FROM transactions_data t JOIN accounts_data a ON t.sender_account_id = a.account_id JOIN customers_data c ON a.customer_id = c.customer_id WHERE c.customer_id = ?;`, [value.customer_id]);
+        const [rows] = await connection.query(`SELECT t.* FROM transactions_data t JOIN accounts_data a ON t.sender_account_id = a.account_id OR t.reciever_account_id = a.account_id JOIN customers_data c ON a.customer_id = c.customer_id WHERE c.customer_id = ?;`, [value.customer_id]);
         logger.verbose('Selected ' + rows.length + ' row(s).');
         connection.release();
         return rows;
