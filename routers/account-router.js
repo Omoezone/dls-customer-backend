@@ -1,13 +1,17 @@
 import express from "express";
 import conn from "./startConnection.js";
 import logger from '../utils/logger.js';
+import { authenticateToken } from "./auth-router.js";
+
 
 const router = express.Router();
 router.use(express.json());
 
 // GET ALL ACCOUNTS
-router.get("/accounts", async (req, res) => {
-    try {
+
+router.get("/accounts", authenticateToken, async (req, res) => {
+    try{
+
         const result = await getAccounts();
         logger.verbose("the result recieved from getAccounts function", result);
         res.status(200).json(result);
@@ -31,8 +35,9 @@ async function getAccounts() {
     }
 }
 // GET ALL ACCOUNTS FOR A CUSTOMER
-router.get("/accounts/:customer_id", async (req, res) => {
-    try {
+
+router.get("/accounts/:customer_id", authenticateToken, async (req, res) => { 
+    try{
         const result = await getAccountsForCustomer(req.params.customer_id || req.body.customer_id);
         logger.verbose("the result recieved from getAccountsForCustomer function", result);
         res.status(200).json(result);
