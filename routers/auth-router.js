@@ -2,10 +2,10 @@ import express from "express";
 import bcrypt from "bcrypt";
 import conn from "./startConnection.js";
 import jwt from "jsonwebtoken";
+import logger from '../utils/logger.js';
 import dotenv from "dotenv";
 
 dotenv.config();
-
 const router = express.Router();
 router.use(express.json());
 
@@ -60,10 +60,10 @@ export async function generateAccessToken(user) {
 export async function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-    if(token == null) return res.sendStatus(401);
+    if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, process.env.JWT_TOKEN, (err, user) => {
-        if(err) return res.sendStatus(403);
+        if (err) return res.sendStatus(403);
 
         req.user = user;
         next();
