@@ -41,7 +41,7 @@ export async function getCustomers() {
 }
 
 // Get a single customer by id with customer_data joined
-router.get("/customers/:id", async (req, res) => { 
+router.get("/customers/:id", authenticateToken, async (req, res) => { 
     try{
         const result = await getSingleCustomer(req.params.id || req.body.id);
         console.log("the result recieved from getSingleCustomer function", result);
@@ -74,7 +74,7 @@ export async function getSingleCustomer(id) {
 }
 
 // Show all deleted users
-router.get("/customers_deleted", async (req, res) => {
+router.get("/customers_deleted", authenticateToken, async (req, res) => {
     try{
         const result = await getDeletedCustomers();
         res.status(200).json(result);
@@ -97,7 +97,7 @@ export async function getDeletedCustomers() {
 }
 
 // create customer and customer_data related to that customer
-router.post("/customer", async (req, res) => {
+router.post("/customer", authenticateToken, async (req, res) => {
     try{
         const result = await createCustomer(req.body);
         res.status(200).json(result);
@@ -134,7 +134,7 @@ export async function createCustomer(values){
 }   
 
 // UPDATE CUSTOMER
-router.post("/update_customer", async (req, res) => {
+router.post("/update_customer", authenticateToken, async (req, res) => {
     try{
         req.body.password = await bcrypt.hash(req.body.password, 10);
         const result = await updateCustomer(req.body);
@@ -161,7 +161,7 @@ export async function updateCustomer(value) {
 }
 
 // delete a customer by setting deleted to true
-router.post("/delete_customer", async (req, res) => {
+router.post("/delete_customer", authenticateToken, async (req, res) => {
     try{
         const result = await deleteCustomer(req.body);
         res.status(200).json(result);
