@@ -8,6 +8,8 @@ import { ServiceBusClient } from "@azure/service-bus";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import dotenv from "dotenv";
+import morganMiddleware from "./middleware/morgan.middleware.js";
+import logger from "./utils/logger.js";
 
 dotenv.config();
 
@@ -19,6 +21,7 @@ app.use(userRouter);
 app.use(accountRouter);
 app.use(transactionRouter);
 app.use(authRouter);
+app.use(morganMiddleware);
 
 // Swagger Options, used for documentation and UI
 const options = {
@@ -55,26 +58,26 @@ async function recieveFromQueue() {
         if (messages.length > 0) {
             const requestMessage = messages[0];
             if(requestMessage.applicationProperties.bodyType === "readAll") {
-                console.log("TYPEOF : read-all")
+                logger.info("TYPEOF : read-all");
                 responseMessageBody = await getCustomers() || "Error with request for customers";
             }else if(requestMessage.applicationProperties.bodyType === "readSingle") {
-                console.log("TYPEOF : read-single")
+                logger.info("TYPEOF : read-single");
                 responseMessageBody = await getSingleCustomer(requestMessage.body.id) || "Error with request for single customer";
             }else if(requestMessage.applicationProperties.bodyType === "readDeleted") {
-                console.log("TYPEOF : read-deleted")
+                logger.info("TYPEOF : read-deleted");
                 responseMessageBody = await getDeletedCustomers() || "Error with request for deleted customers";
             }else if(requestMessage.applicationProperties.bodyType === "update") {
-                console.log("TYPEOF : update")
+                logger.info("TYPEOF : update");
                 responseMessageBody = await updateCustomer(requestMessage.body) || "Error with request for updating customer";
             }else if(requestMessage.applicationProperties.bodyType === "delete") {
-                console.log("TYPEOF : delete")
+                logger.info("TYPEOF : delete");
                 responseMessageBody = await deleteCustomer(requestMessage.body.id) || "Error with request for deleting customer";
             }else if(requestMessage.applicationProperties.bodyType === "create") {
-                console.log("TYPEOF : create")
+                logger.info("TYPEOF : create");
                 responseMessageBody = await createCustomer(requestMessage.body) || "Error with request for creating customer";
             }
             
-            console.log("Received ", requestMessage.applicationProperties.bodyType," request: ", requestMessage.body);
+            logger.verbose("Received ", requestMessage.applicationProperties.bodyType," request: ", requestMessage.body);
 
             // Process the request and prepare the response
             const responseMessage = {
@@ -96,4 +99,4 @@ recieveFromQueue();
 
 // --- START SERVER ---
 const PORT = process.env.PORT ||  5050;
-app.listen(PORT, () => console.log("Server running on:", PORT));
+app.listen(PORT, () => logger.verbose("Server running on: " + PORT));

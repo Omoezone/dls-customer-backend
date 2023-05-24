@@ -1,5 +1,6 @@
 import express from "express";
 import conn from "./startConnection.js";
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 router.use(express.json());
@@ -8,65 +9,66 @@ router.use(express.json());
 
 // CREATE A NEW TRANSACTION TODO: SØRG FOR AT ERRORS INDE I transaction bliver exit hvis fejl
 router.post("/transaction", async (req, res) => {
-    try{
+    try {
         const result = await createTransaction(req.body);
-        console.log("the result recieved from createTransaction function", result);
+        logger.verbose("the result recieved from createTransaction function", result);
         res.status(200).send(result);
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).send("Internal server error when creating transaction");
     }
 });
 
-async function createTransaction(values){
+async function createTransaction(values) {
     const connection = await conn.getConnection();
-    try{
+    try {
         await connection.beginTransaction();
-        console.log("entered transaction");
+        logger.info("entered transaction");
         const create_sender = 'INSERT INTO transactions_data (transaction_id, sender_account_id, reciever_account_id,amount) VALUES (?,?,?,?)';
         const create_reciever = 'INSERT INTO transactions_data (transaction_id, sender_account_id, reciever_account_id,amount) VALUES (?,?,?,?)';
         // ----- Create transaction for sender -----
         const sender = await connection.query('INSERT INTO transactions () VALUES ()');
         const senderData = await connection.query(create_sender, [sender[0].insertId, values.sender_account_id, values.reciever_account_id, values.amount]);
-        console.log(senderData)
+        logger.verbose(senderData);
         // ----- Create transaction for reciever -----
         const reciever = await connection.query('INSERT INTO transactions () VALUES ()');
         const recieverData = await connection.query(create_reciever, [reciever[0].insertId, values.reciever_account_id, values.sender_account_id, -(values.amount)]);
-        console.log(recieverData)
+        logger.verbose(recieverData);
         // ----- Commit changes -----
         await connection.commit();
         return "Transaction created";
-    }catch(err){
-        console.log("rolling back transactions")
+    } catch (err) {
+        logger.info("rolling back transactions");
         await connection.rollback();
         throw err;
-    }finally{
+    } finally {
         connection.release();
     }
 }
 
 
 router.get("/transaction/:account_id", async (req, res) => {
-    try{
+    try {
         // to work with swagger use req.params.account_id instead of req.body.accountId
         const result = await getTransactionsById(req.body.accountId);
-        console.log("the result recieved from getTransactions function", result);
+        logge.verbose("the result recieved from getTransactions function", result);
         res.status(200).send(result);
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).send("Internal server error when getting transactions");
     }
 });
 
-async function getTransactionsById(id){
+async function getTransactionsById(id) {
     const connection = await conn.getConnection();
-    console.log(id)
-    try{
+    logger.verbose(id)
+    try {
         const [rows] = await connection.query(`SELECT * FROM transactions t JOIN transactions_data td ON t.id = td.transaction_id WHERE td.sender_account_id = ?;`, [id]);
-        console.log('Selected ' + rows.length + ' row(s).');
+        logger.verbose('Selected ' + rows.length + ' row(s).');
         connection.release();
         return rows;
-    }catch(err){
+    } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
@@ -82,28 +84,28 @@ async function getTransactionsById(id){
 
 // GET ALL TRANSACTIONS
 router.get("/transactions", async (req, res) => {
-    try{
+    try {
         const result = await getTransactions();
-        console.log("the result recieved from getTransactions function", result);
+        logger.verbose("the result recieved from getTransactions function", result);
         res.status(200).send(result);
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        logger.error(err);
         res.status(500).send("Internal server error when getting transactions");
     }
 });
 
-async function getTransactions(){
+async function getTransactions() {
     const connection = await conn.getConnection();
-    try{
+    try {
         const [rows] = await connection.query(`SELECT * FROM transactions t JOIN transactions_data td ON t.id = td.transaction_id`);
-        console.log('Selected ' + rows.length + ' row(s).');
+        logger.verbose('Selected ' + rows.length + ' row(s).');
         connection.release();
         return rows;
-    }catch(err){
+    } catch (err) {
+        logger.error(err);
         connection.release();
         throw err;
     }
 }
-
 
 export default router;

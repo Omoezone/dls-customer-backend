@@ -2,33 +2,39 @@ import express from "express";
 import bcrypt from "bcrypt";
 import conn from "./startConnection.js";
 import jwt from "jsonwebtoken";
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 router.use(express.json());
 
 // Login router
 router.post("/auth/login", async (req, res) => {
-    console.log("Login request received");
-    console.log(req.body)
+    logger.info("Login request received");
+    logger.verbose(req.body);
     conn.getConnection(function (err, connection) {
-        if(err) throw err;
+        if (err) {
+            logger.error("Error connecting to the database: ", err);
+            throw err;
+        }
         const select_customer = 'SELECT * FROM customers c JOIN customers_data cd ON c.id = cd.customer_id WHERE (cd.customer_id, cd.snap_timestamp) IN (SELECT admin_id, MAX(snap_timestamp) FROM customers_data GROUP BY customer_id) AND c.deleted=false AND cd.email=?;';
         connection.query(select_customer, [req.body.email], function (err, result) {
             if (err) {
+                logger.error("Error executing the query: ", err);
                 connection.release();
                 throw err;
             }
-            if(result.length === 0) {
+            if (result.length === 0) {
                 res.status(404).send("customer not found");
                 connection.release();
-            }else{
-                console.log('customer with name: ' + req.body.first_name + ' selected!\n ', result)
-                bcrypt.compare(req.body.password, result[0].pass, function(err, result1) {
-                    if(err) {
+            } else {
+                logger.verbose('customer with name: ' + req.body.first_name + ' selected!\n ', result)
+                bcrypt.compare(req.body.password, result[0].pass, function (err, result1) {
+                    if (err) {
+                        logger.error(err);
                         connection.release();
                         throw err;
                     }
-                    if(result1 === true) {
+                    if (result1 === true) {
                         const token = generateAccessToken(result[0].first_name);
                         res.status(200).send(
                             {
@@ -40,7 +46,7 @@ router.post("/auth/login", async (req, res) => {
                                 "jwttoken": token
                             });
                         connection.release();
-                    }else{
+                    } else {
                         res.status(401).send("Wrong credentials");
                         connection.release();
                     }
@@ -59,10 +65,10 @@ export async function generateAccessToken(user) {
 export async function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-    if(token == null) return res.sendStatus(401);
+    if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, process.env.JWT_TOKEN, (err, user) => {
-        if(err) return res.sendStatus(403);
+        if (err) return res.sendStatus(403);
 
         req.user = user;
         next();
